@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
-#include <cereal/archives/json.hpp>
+#include "json.hpp"
 
 namespace udp_lib
 {
@@ -97,15 +97,8 @@ namespace udp_lib
          */
         void udp_send(const MSG_TYPE &msg) const
         {
-            // Serialization
-            std::stringstream ss;
-            {
-                cereal::JSONOutputArchive o_archive(ss);
-                o_archive(msg);
-            }
-
             // Send
-            if (sendto(sock_, ss.str().c_str(), ss.str().length(), 0, (struct sockaddr *)&addr_, sizeof(addr_)) < 0)
+            if (sendto(sock_, msg.c_str(), msg.length(), 0, (struct sockaddr *)&addr_, sizeof(addr_)) < 0)
             {
                 std::cerr << "[Error] UDP send Error." << std::endl;
                 exit(1);
@@ -232,10 +225,7 @@ namespace udp_lib
 
             if (is_receive_msg)
             {
-                std::stringstream ss;
-                ss << tmp_msg;
-                cereal::JSONInputArchive in_archive(ss);
-                in_archive(*msg);
+                *msg = tmp_msg;
                 return true;
             }
             else
